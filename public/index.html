@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23111' width='100' height='100'/><text y='.9em' font-size='90'>✏️</text></svg>">
+    <title>Sage LoRA</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #111;
+            color: #fff;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
+        
+        h1 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input::placeholder {
+            color: #666;
+        }
+        
+        button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+        }
+        
+        .status {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+        
+        .result {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .result img {
+            width: 100%;
+            display: block;
+        }
+        
+        .history {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .history img {
+            width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sage LoRA</h1>
+    
+    <div class="input-row">
+        <input type="text" id="prompt" placeholder="a cat sitting on a windowsill">
+        <button id="generate">Go</button>
+    </div>
+    
+    <div class="status" id="status"></div>
+    
+    <div class="result" id="result" style="display:none;">
+        <img id="output" src="">
+    </div>
+    
+    <div class="history" id="history"></div>
+
+    <script>
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generate');
+        const status = document.getElementById('status');
+        const result = document.getElementById('result');
+        const output = document.getElementById('output');
+        const history = document.getElementById('history');
+        
+        generateBtn.addEventListener('click', generate);
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') generate();
+        });
+        
+        async function generate() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            
+            generateBtn.disabled = true;
+            status.textContent = 'Generating...';
+            result.style.display = 'none';
+            
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                const data = await res.json();
+                
+                if (data.image) {
+                    output.src = data.image;
+                    result.style.display = 'block';
+                    status.textContent = '';
+                    
+                    // Add to history
+                    const histImg = document.createElement('img');
+                    histImg.src = data.image;
+                    history.prepend(histImg);
+                } else {
+                    status.textContent = 'Error: ' + (data.error || 'Unknown error');
+                }
+                
+            } catch (err) {
+                status.textContent = 'Error: ' + err.message;
+            }
+            
+            generateBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>

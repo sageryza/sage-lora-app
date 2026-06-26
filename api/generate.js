@@ -2,8 +2,9 @@
 const MODELS = {
   gosh: { model: 'sageryza/gosh', trigger: 'gosh' },
   hoonie: { model: 'sageryza/hoonie', trigger: 'HOONIE' },
+  'hoonie-crisp': { model: 'sageryza/hoonie-crisp', trigger: 'HOONIE' },
 };
-const DEFAULT_MODEL = 'hoonie';
+const DEFAULT_MODEL = 'hoonie-crisp';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

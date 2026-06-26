@@ -1,7 +1,7 @@
 // Whitelisted models -> trigger word. Add new LoRAs here after training.
 const MODELS = {
   gosh: { model: 'sageryza/gosh', trigger: 'gosh' },
-  hoonie: { model: 'sageryza/hoonie', trigger: 'HOONIE' },
+  hoonie: { model: 'sageryza/hoonie', trigger: 'HOONIE', style: 'linocut relief print, white background', steps: 40 },
 };
 const DEFAULT_MODEL = 'hoonie';
 
@@ -14,9 +14,10 @@ export default async function handler(req, res) {
   const API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
   const selected = MODELS[modelKey] || MODELS[DEFAULT_MODEL];
-  const { model: MODEL, trigger: TRIGGER } = selected;
+  const { model: MODEL, trigger: TRIGGER, style: STYLE, steps: STEPS } = selected;
 
-  const fullPrompt = prompt.includes(TRIGGER) ? prompt : `${prompt}, ${TRIGGER}`;
+  let fullPrompt = prompt.includes(TRIGGER) ? prompt : `${prompt}, ${TRIGGER}`;
+  if (STYLE) fullPrompt = `${fullPrompt}, ${STYLE}`;
 
   try {
     // Get model version
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         version,
-        input: { prompt: fullPrompt, num_inference_steps: 50 }
+        input: { prompt: fullPrompt, num_inference_steps: STEPS || 40 }
       })
     });
 

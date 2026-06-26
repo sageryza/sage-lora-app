@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         version,
-        input: { prompt: fullPrompt }
+        input: { prompt: fullPrompt, num_inference_steps: 50 }
       })
     });
 

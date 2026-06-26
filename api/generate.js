@@ -4,7 +4,7 @@ const MODELS = {
   hoonie: { model: 'sageryza/hoonie', trigger: 'HOONIE' },
   'hoonie-crisp': { model: 'sageryza/hoonie-crisp', trigger: 'HOONIE' },
 };
-const DEFAULT_MODEL = 'hoonie-crisp';
+const DEFAULT_MODEL = 'hoonie';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -75,7 +75,9 @@
   </section>
 
   <section id="grid"></section>
-  <pre id="picks"></pre>
+  <textarea id="picks" readonly placeholder="Your picks will appear here — tap to select all, then copy."
+            style="display:none;width:100%;height:180px;margin-top:12px;background:#1a1a1a;color:#9fe6b0;
+                   border:1px solid #333;border-radius:6px;padding:10px;font-family:monospace;font-size:12px;"></textarea>
 
 <script>
 const LS = 'xiCardPicks';
@@ -164,10 +166,22 @@ function show(which){
 }
 document.getElementById('tabSwipe').onclick=()=>show('swipe');
 document.getElementById('tabGrid').onclick=()=>{show('grid');renderGrid();};
-document.getElementById('exportBtn').onclick=()=>{
+function capFor(file){
+  const m = (manifestCache||[]).find(c=>c.variants.includes(file));
+  if(!m) return file;
+  const n = m.variants.indexOf(file)+1;
+  return `${m.caption}  #${n}  (${file})`;
+}
+document.getElementById('exportBtn').onclick=async ()=>{
+  manifestCache = manifestCache || await fetch('/cards-manifest.json').then(r=>r.json()).catch(()=>[]);
   const kept = Object.entries(decisions).filter(([,v])=>v==='keep').map(([f])=>f);
+  const text = kept.length ? kept.map(capFor).join('\n') : '(no picks yet)';
   const p = document.getElementById('picks');
-  p.style.display='block'; p.textContent = kept.length? kept.join('\n') : '(no picks yet)';
+  p.style.display='block'; p.value = text; p.scrollIntoView({behavior:'smooth'});
+  p.focus(); p.select();
+  let copied=false;
+  try { await navigator.clipboard.writeText(text); copied=true; } catch(e){}
+  alert(`${kept.length} picks${copied?' copied to clipboard':''} — paste them to Sage's chat. (Also shown in the box below.)`);
 };
 
 show('swipe'); load();

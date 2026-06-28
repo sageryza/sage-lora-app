@@ -93,7 +93,7 @@ function updateCount(){
 }
 
 async function load(){
-  const manifest = await fetch('/cards-manifest.json').then(r=>r.json()).catch(()=>null);
+  const manifest = await fetch('/cards-manifest.json?t='+Date.now()).then(r=>r.json()).catch(()=>null);
   if(!manifest){ document.getElementById('stage').innerHTML='<div class="card"><div class="cap">No manifest yet</div></div>'; return; }
   items = [];
   manifest.forEach(c => c.variants.forEach(v => items.push({card:c.id, cap:c.caption, file:v})));
@@ -138,7 +138,7 @@ document.getElementById('stage').addEventListener('touchend',e=>{
 let manifestCache=null;
 async function renderGrid(){
   const g = document.getElementById('grid');
-  manifestCache = manifestCache || await fetch('/cards-manifest.json').then(r=>r.json()).catch(()=>[]);
+  manifestCache = manifestCache || await fetch('/cards-manifest.json?t='+Date.now()).then(r=>r.json()).catch(()=>[]);
   g.innerHTML = manifestCache.map(c=>`
     <div class="group"><h2>${c.caption}</h2><div class="variants">
       ${c.variants.map(v=>`
@@ -173,7 +173,7 @@ function capFor(file){
   return `${m.caption}  #${n}  (${file})`;
 }
 document.getElementById('exportBtn').onclick=async ()=>{
-  manifestCache = manifestCache || await fetch('/cards-manifest.json').then(r=>r.json()).catch(()=>[]);
+  manifestCache = manifestCache || await fetch('/cards-manifest.json?t='+Date.now()).then(r=>r.json()).catch(()=>[]);
   const kept = Object.entries(decisions).filter(([,v])=>v==='keep').map(([f])=>f);
   const text = kept.length ? kept.map(capFor).join('\n') : '(no picks yet)';
   const p = document.getElementById('picks');

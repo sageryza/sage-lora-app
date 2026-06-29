@@ -1,14 +1,23 @@
+// Whitelisted models -> trigger word. Add new LoRAs here after training.
+const MODELS = {
+  gosh: { model: 'sageryza/gosh', trigger: 'gosh' },
+  hoonie: { model: 'sageryza/hoonie', trigger: 'HOONIE', style: 'linocut relief print, white background', steps: 40 },
+};
+const DEFAULT_MODEL = 'hoonie';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt } = req.body;
+  const { prompt, model: modelKey } = req.body;
   const API_TOKEN = process.env.REPLICATE_API_TOKEN;
-  const MODEL = 'sageryza/gosh';
-  const TRIGGER = 'gosh';
 
-  const fullPrompt = prompt.includes(TRIGGER) ? prompt : `${prompt}, ${TRIGGER}`;
+  const selected = MODELS[modelKey] || MODELS[DEFAULT_MODEL];
+  const { model: MODEL, trigger: TRIGGER, style: STYLE, steps: STEPS } = selected;
+
+  let fullPrompt = prompt.includes(TRIGGER) ? prompt : `${prompt}, ${TRIGGER}`;
+  if (STYLE) fullPrompt = `${fullPrompt}, ${STYLE}`;
 
   try {
     // Get model version
@@ -16,6 +25,9 @@ export default async function handler(req, res) {
       headers: { 'Authorization': `Token ${API_TOKEN}` }
     });
     const modelData = await modelRes.json();
+    if (!modelData.latest_version) {
+      return res.status(503).json({ error: `Model ${MODEL} has no trained version yet` });
+    }
     const version = modelData.latest_version.id;
 
     // Create prediction
@@ -27,7 +39,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         version,
-        input: { prompt: fullPrompt }
+        input: { prompt: fullPrompt, num_inference_steps: STEPS || 40 }
       })
     });
 
